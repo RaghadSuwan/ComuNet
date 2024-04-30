@@ -5,7 +5,7 @@ export const generalFields = {
         'string.email': "Please enter a valid email"
     }),
 
-    password: Joi.string().required().min(3).messages({
+    password: Joi.string().required().min(8).messages({
         'string.empty': "Password is required",
         'string.min': "Password should have a minimum length of {#limit} characters"
     }),
@@ -25,13 +25,16 @@ export const generalFields = {
 
 export const validation = (schema) => {
     return (req, res, next) => {
-        const inputsData = { ...req.body, ...req.params, ...req.query};
+        const inputsData = { ...req.body, ...req.params, ...req.query };
         if (req.file || req.files) {
             inputsData.file = req.file || req.files;
         }
         const validationResult = schema.validate(inputsData, { abortEarly: false });
         if (validationResult.error) {
-            return next(new Error("Validation error", { cause: 400 }))
+            return res.status(400).json({
+                message: "Validation error",
+                validationError: validationResult.error.details
+            });
         }
         next();
     }
