@@ -1,7 +1,13 @@
 import mongoose, { Schema, model } from 'mongoose';
 const userSchema = new Schema(
   {
-    userName: {
+    firstNmae: {
+      type: String,
+      required: true,
+      min: 3,
+      max: 20,
+    }, 
+    lastName: {
       type: String,
       required: true,
       min: 3,
@@ -48,7 +54,7 @@ const userSchema = new Schema(
       type: String,
       default: null,
     }, 
-    changePassword: {
+    changePasswordTime: {
       type: Date,
     }
   },

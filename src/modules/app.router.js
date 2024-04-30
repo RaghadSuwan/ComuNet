@@ -1,11 +1,7 @@
-// import categoriesRouter from './categories/categories.router.js';
-// import subcategoryRouter from './subcategory/subcategory.router.js';
-// import productsRouter from './products/products.router.js';
-// import couponRouter from './coupon/coupon.router.js';
+
  import authRouter from './auth/auth.router.js';
-// import cartRouter from './cart/cart.router.js';
 import connectDB from '../../DB/connection.js';
-import { globalerrorhandler } from '../services/errorHanding.js';
+import { globalerrorhandler } from '../utils/errorHanding.js';
 const initapp = async (app, express) => {
   app.use(express.json());
   connectDB();

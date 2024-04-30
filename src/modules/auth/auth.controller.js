@@ -1,11 +1,11 @@
 import userModel from '../../../DB/model/user.model.js';
 import bcryptjs from 'bcryptjs';
-import cloudinary from '../../services/cloudinary.js';
+import cloudinary from '../../utils/cloudinary.js';
 import jwt from 'jsonwebtoken';
 import { customAlphabet } from 'nanoid';
-import { sendemail } from '../../services/email.js';
+import { sendemail } from '../../utils/email.js';
 export const SignUp = async (req, res, next) => {
-    const { userName, email, password } = req.body;
+    const { firstNmae, lastName, email, password } = req.body;
     const user = await userModel.findOne({ email });
     if (user) {
         return next(new Error("email already exists", { cause: 409 }));
@@ -23,46 +23,35 @@ export const SignUp = async (req, res, next) => {
         "Confirm Email",
         `<a href='${req.protocol}://${req.headers.host}/auth/confirmEmail/${token}'>Verify</a>`
     );
-    const createUser = await userModel.create({ userName, email, password: hashedPassword, image: { secure_url, public_id } });
+    const createUser = await userModel.create({ firstNmae, lastName, email, password: hashedPassword, image: { secure_url, public_id } });
     return res.status(201).json({ message: "Success", user: createUser });
 };
 export const confirmEmail = async (req, res, next) => {
     const token = req.params.token;
-    try {
-        const decodedToken = jwt.verify(token, process.env.CONFIRMEMAILSECRET);
-        if (!decodedToken) {
-            return next(new Error("Invalid Authorization Token", { cause: 409 }));
-        }
-        const user = await userModel.findOneAndUpdate(
-            { email: decodedToken.email, confirmEmail: false },
-            { confirmEmail: true });
-        if (!user) {
-            return next(new Error("Invalid: Email is already verified or does not exist", { cause: 409 }));
-
-        }
-        return res.redirect(process.env.LOGINFRONTEND);
-        /// return res.status(200).json({ message: "Your email is verified" });
-    } catch (error) {
-        console.error("Error in confirmEmail:", error);
-        return res.status(500).json({ message: "Internal Server Error" });
+    const decodedToken = jwt.verify(token, process.env.CONFIRMEMAILSECRET);
+    if (!decodedToken) {
+        return next(new Error("Invalid Authorization Token", { cause: 409 }));
     }
-    
-    ///ارجعي لسطر 46***********************************
-
-
+    const user = await userModel.findOneAndUpdate(
+        { email: decodedToken.email, confirmEmail: false },
+        { confirmEmail: true });
+    if (!user) {
+        return next(new Error("Invalid: Email is already verified or does not exist", { cause: 409 }));
+    }
+    return res.redirect(process.env.LOGINFRONTEND);
 };
 export const SignIn = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await userModel.findOne({ email });
     if (!user) {
-        return res.status(400).json({ message: 'data invalid' });
+        return next(new Error("data invalid", { cause: 400 }));
     }
     if (!user.confirmEmail) {
-        return res.status(400).json({ message: 'Please confirm your email' });
+        return next(new Error("please verify your email", { cause: 400 }));
     }
     const match = await bcryptjs.compare(password, user.password);
     if (!match) {
-        return res.status(400).json({ message: 'data invalid' });
+        return next(new Error("data invalid", { cause: 400 }));
     }
     const token = jwt.sign({ id: user._id, role: user.role, status: user.status }, process.env.LOGINSECRET
         // , { expiresIn: '50m' }
@@ -73,42 +62,45 @@ export const SignIn = async (req, res, next) => {
 };
 export const sendCode = async (req, res, next) => {
     const { email } = req.body;
-    try {
-        const user = await userModel.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        const code = customAlphabet("1234567890", 4)();
-        const updatedUser = await userModel.findOneAndUpdate(
-            { email },
-            { sendCode: code },
-            { new: true }
-        );
-        const html = `<h2>The code is: ${code}</h2>`;
-        await sendemail(email, `Reset Password`, html);
-        // return res.redirect(process.env.FORGETPASSFRONT);
-        return res.status(200).json({ message: "Success", user: updatedUser });
-    } catch (error) {
-        console.error("Error in sendCode:", error);
-        return res.status(500).json({ message: "Internal Server Error" });
+    const user = await userModel.findOne({ email });
+    if (!user) {
+        return next(new Error("user not found!", { cause: 400 }));
     }
+    const code = customAlphabet("1234567890", 4)();
+    const updatedUser = await userModel.findOneAndUpdate(
+        { email },
+        { sendCode: code },
+        { new: true }
+    );
+    const html = `<h2>The code is: ${code}</h2>`;
+    await sendemail(email, `Reset Password`, html);
+    // return res.redirect(process.env.FORGETPASSFRONT);
+    return res.status(200).json({ message: "Success", user: updatedUser });
 };
 export const forgotPassword = async (req, res, next) => {
     const { email, password, code } = req.body;
     const user = await userModel.findOne({ email });
 
     if (!user) {
-        return res.status(404).json({ message: "not register account" });
+        return next(new Error("not register account !", { cause: 404 }));
     }
     if (user.sendCode !== code) {
-        return res.status(400).json({ message: "invalid code" });
+        return next(new Error("invalid code!", { cause: 404 }));
     }
     let match = await bcryptjs.compare(password, user.password);
     if (match) {
-        return res.status(405).json({ message: "same password" });
+        return next(new Error("same password", { cause: 404 }));
     }
     user.password = await bcryptjs.hash(password, parseInt(process.env.SALT_ROUND));
     user.sendCode = null;
+    user.changePasswordTime = Date.now();
     await user.save();
     return res.status(200).json({ message: "success" });
 };
+export const deleteUnConfirmedUsers = async (req, res, next) => {
+    const users = await userModel.deleteMany({ confirmEmail: false });
+    if (!users) {
+        return next(new Error("All users are confirmed", { cause: 400 }))
+    }
+    return res.status(200).json({ message: success });
+}

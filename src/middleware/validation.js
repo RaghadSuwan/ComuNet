@@ -31,10 +31,7 @@ export const validation = (schema) => {
         }
         const validationResult = schema.validate(inputsData, { abortEarly: false });
         if (validationResult.error) {
-            return res.status(400).json({
-                message: "Validation error",
-                validationError: validationResult.error.details
-            });
+            return next(new Error("Validation error", { cause: 400 }))
         }
         next();
     }

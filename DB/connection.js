@@ -10,5 +10,4 @@ const connectDB = () => {
       console.error(`error to connect db ${error}`);
     });
 };
-
 export default connectDB;
