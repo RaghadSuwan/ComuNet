@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from 'mongoose';
+
 const userSchema = new Schema(
   {
     firstNmae: {
@@ -6,7 +7,7 @@ const userSchema = new Schema(
       required: true,
       min: 3,
       max: 20,
-    }, 
+    },
     lastName: {
       type: String,
       required: true,
@@ -53,7 +54,7 @@ const userSchema = new Schema(
     sendCode: {
       type: String,
       default: null,
-    }, 
+    },
     changePasswordTime: {
       type: Date,
     }
@@ -62,6 +63,5 @@ const userSchema = new Schema(
     timestamps: true,
   }
 );
-
 const userModel = mongoose.models.User || model('User', userSchema);
 export default userModel;
