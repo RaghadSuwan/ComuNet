@@ -1,33 +1,44 @@
-import userModel from '../../../DB/model/user.model.js';
-import bcryptjs from 'bcryptjs';
-import cloudinary from '../../utils/cloudinary.js';
-import jwt from 'jsonwebtoken';
-import { customAlphabet } from 'nanoid';
-import { sendemail } from '../../utils/email.js';
+import userModel from "../../../DB/model/user.model.js";
+import bcryptjs from "bcryptjs";
+import cloudinary from "../../utils/cloudinary.js";
+import jwt from "jsonwebtoken";
+import { customAlphabet } from "nanoid";
+import { sendemail } from "../../utils/email.js";
 
 export const SignUp = async (req, res, next) => {
-    const { firstNmae, lastName, email, password } = req.body;
+    const { firstName,lastName, email, password } = req.body;
     const user = await userModel.findOne({ email });
     if (user) {
         return next(new Error("email already exists", { cause: 409 }));
     }
-    const hashedPassword = await bcryptjs.hash(password, parseInt(process.env.SALT_ROUND));
+    const hashedPassword = await bcryptjs.hash(
+        password,
+        parseInt(process.env.SALT_ROUND)
+    );
     const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.file.path,
         {
             folder: `${process.env.APP_NAME}/User`,
         }
     );
-    const token = jwt.sign({ email }, process.env.CONFIRMEMAILSECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ email }, process.env.CONFIRMEMAILSECRET, {
+        expiresIn: "1d",
+    });
     await sendemail(
         email,
         "Confirm Email",
         `<a href='${req.protocol}://${req.headers.host}/auth/confirmEmail/${token}'>Verify</a>`
     );
-    const createUser = await userModel.create({ firstNmae, lastName, email, password: hashedPassword, image: { secure_url, public_id } });
+    const createUser = await userModel.create({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        image: { secure_url, public_id },
+    });
     return res.status(201).json({ message: "Success", user: createUser });
 };
-export const confirmEmail = async (req, res, next) => {
+export const ConfirmEmail = async (req, res, next) => {
     const token = req.params.token;
     const decodedToken = jwt.verify(token, process.env.CONFIRMEMAILSECRET);
     if (!decodedToken) {
@@ -35,9 +46,14 @@ export const confirmEmail = async (req, res, next) => {
     }
     const user = await userModel.findOneAndUpdate(
         { email: decodedToken.email, confirmEmail: false },
-        { confirmEmail: true });
+        { confirmEmail: true }
+    );
     if (!user) {
-        return next(new Error("Invalid: Email is already verified or does not exist", { cause: 409 }));
+        return next(
+            new Error("Invalid: Email is already verified or does not exist", {
+                cause: 409,
+            })
+        );
     }
     return res.redirect(process.env.LOGINFRONTEND);
 };
@@ -54,13 +70,19 @@ export const SignIn = async (req, res, next) => {
     if (!match) {
         return next(new Error("data invalid", { cause: 400 }));
     }
-    const token = jwt.sign({ id: user._id, role: user.role, status: user.status }, process.env.LOGINSECRET
+    const token = jwt.sign(
+        { id: user._id, role: user.role, status: user.status },
+        process.env.LOGINSECRET
         // , { expiresIn: '50m' }
     );
-    const refreshToken = jwt.sign({ id: user._id, role: user.role, status: user.status }, process.env.LOGINSECRET, { expiresIn: 60 * 60 * 30 * 24 });
+    const refreshToken = jwt.sign(
+        { id: user._id, role: user.role, status: user.status },
+        process.env.LOGINSECRET,
+        { expiresIn: 60 * 60 * 30 * 24 }
+    );
     return res.status(201).json({ message: "Success", token, refreshToken });
 };
-export const sendCode = async (req, res, next) => {
+export const SendCode = async (req, res, next) => {
     const { email } = req.body;
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -77,7 +99,7 @@ export const sendCode = async (req, res, next) => {
     // return res.redirect(process.env.FORGETPASSFRONT);
     return res.status(200).json({ message: "Success", user: updatedUser });
 };
-export const forgotPassword = async (req, res, next) => {
+export const ForgotPassword = async (req, res, next) => {
     const { email, password, code } = req.body;
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -90,16 +112,19 @@ export const forgotPassword = async (req, res, next) => {
     if (match) {
         return next(new Error("same password", { cause: 404 }));
     }
-    user.password = await bcryptjs.hash(password, parseInt(process.env.SALT_ROUND));
+    user.password = await bcryptjs.hash(
+        password,
+        parseInt(process.env.SALT_ROUND)
+    );
     user.sendCode = null;
     user.changePasswordTime = Date.now();
     await user.save();
     return res.status(200).json({ message: "success" });
 };
-export const deleteUnConfirmedUsers = async (req, res, next) => {
+export const DeleteUnConfirmedUsers = async (req, res, next) => {
     const users = await userModel.deleteMany({ confirmEmail: false });
     if (!users) {
-        return next(new Error("All users are confirmed", { cause: 400 }))
+        return next(new Error("All users are confirmed", { cause: 400 }));
     }
     return res.status(200).json({ message: success });
-}
+};

@@ -1,11 +1,13 @@
-import multer from "multer"
+import multer from "multer";
+
 export const fileValidation = {
-  image: ['image/png', 'image/jpeg', 'image/webp'],
-  pdf: ['appliction/pdf']
+  image: ["image/png", "image/jpeg", "image/webp"],
+  pdf: ["appliction/pdf"],
+  excel: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
 };
-function fileUpload(customValidation = []) //فانكشن لنوع اسم بالرفع
-{
-  const storage = multer.diskStorage({});//ستورج مقسومة لنصين
+function fileUpload(customValidation = []) {
+  //فانكشن لنوع اسم بالرفع
+  const storage = multer.diskStorage({}); //ستورج مقسومة لنصين
   function fileFilter(req, file, cb) {
     if (customValidation.includes(file.mimetype)) {
       cb(null, true);
@@ -16,4 +18,5 @@ function fileUpload(customValidation = []) //فانكشن لنوع اسم بال
   const upload = multer({ fileFilter, storage });
   return upload;
 }
+
 export default fileUpload;

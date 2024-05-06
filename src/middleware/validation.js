@@ -1,13 +1,13 @@
-import Joi from 'joi';
-
+import Joi from "joi";
 export const generalFields = {
     email: Joi.string().email().required().min(5).messages({
-        'string.empty': "Email is required",
-        'string.email': "Please enter a valid email"
+        "string.empty": "Email is required",
+        "string.email": "Please enter a valid email",
     }),
     password: Joi.string().required().min(8).messages({
-        'string.empty': "Password is required",
-        'string.min': "Password should have a minimum length of {#limit} characters"
+        "string.empty": "Password is required",
+        "string.min":
+            "Password should have a minimum length of {#limit} characters",
     }),
     file: Joi.object({
         size: Joi.number().positive().required(),
@@ -19,7 +19,7 @@ export const generalFields = {
         originalname: Joi.string().required(),
         fieldname: Joi.string().required(),
         dest: Joi.string(),
-    })
+    }),
 };
 export const validation = (schema) => {
     return (req, res, next) => {
@@ -31,9 +31,9 @@ export const validation = (schema) => {
         if (validationResult.error) {
             return res.status(400).json({
                 message: "Validation error",
-                validationError: validationResult.error.details
+                validationError: validationResult.error.details,
             });
         }
         next();
-    }
+    };
 };
