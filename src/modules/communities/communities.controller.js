@@ -63,7 +63,6 @@ export const UpdateCommunity = async (req, res, next) => {
       new Error(`Invalid community id ${req.params.id}`, { cause: 404 })
     );
   }
-  // Check if the provided name already exists for another community
   if (req.body.name && req.body.name !== community.name) {
     const existingCommunity = await communityModel.findOne({
       name: req.body.name,
@@ -73,9 +72,11 @@ export const UpdateCommunity = async (req, res, next) => {
         new Error(`Community ${req.body.name} already exists`, { cause: 409 })
       );
     }
+    const lowercaseName = req.body.name.toLowerCase();
     community.name = req.body.name;
-    community.slug = slugify(req.body.name);
+    community.slug = slugify(lowercaseName);
   }
+  
   // Update description if provided
   if (req.body.description) {
     community.description = req.body.description;
@@ -109,7 +110,7 @@ export const DeleteCommunity = async (req, res, next) => {
   if (!community) {
     return next(new Error(`Community not found`, { cause: 404 }));
   }
-  await postModel.deleteMany({ categoryId });
+  // await postModel.deleteMany({ categoryId });
   await communityPropertiesModel.deleteMany({ categoryId });
   return res.status(200).json({ message: "success" });
 };

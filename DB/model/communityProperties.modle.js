@@ -4,10 +4,9 @@ const communityPropertiesSchema = new mongoose.Schema({
     type: String,
     required: [true, "Property  is required"],
   },
-  value: {
+  value: [{
     type: String,
-    required: [true, "Value is required"],
-  },
+  }],
   customer_fill: {
     type: Boolean,
     required: [true, "Customer fill is required"],

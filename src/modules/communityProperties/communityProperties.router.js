@@ -1,6 +1,5 @@
 import { Router } from "express";
 import * as CPropertiesController from "./communityProperties.controller.js";
-import fileUpload, { fileValidation } from "../../utils/multer.js";
 import { auth, roles } from "../../middleware/auth.js";
 import { endPoint } from "./communityProperties.endPoint.js";
 import { asyncHandler } from "../../utils/errorHanding.js";
@@ -11,19 +10,14 @@ const router = Router({ mergeParams: true });
 
 router.post("/",
     auth(endPoint.addProperty),
+    validation(validator.add),
     asyncHandler(CPropertiesController.addProperty));
 router.get("/",
-    auth(endPoint.viewProperty),
-    asyncHandler(CPropertiesController.GetProperties));
+auth(Object.values(roles)),
+asyncHandler(CPropertiesController.GetProperties));
 router.delete("/:id",
     auth(endPoint.deleteProperty),
     asyncHandler(CPropertiesController.DeleteProperty));
-
-// router.post("/cancleCreation", communitycontroller.cancleCreation);
-// router.delete(
-//   "/:community/deleteProperty/:id",
-//   communitycontroller.deleteProperty
-// );
-// router.put("/prparty/:id", communitycontroller.updateProperty); //مش شغال منيح
+router.put("/:id", auth(endPoint.updateProperty), CPropertiesController.UpdateProperty);
 
 export default router;

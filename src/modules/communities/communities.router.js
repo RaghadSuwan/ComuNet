@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as communitiesController from "./communities.controller.js";
 import fileUpload, { fileValidation } from "../../utils/multer.js";
-import CPropertiesRouter from '../../modules/communityProperties/communityProperties.router.js';
+import CPropertiesRouter from '../communityProperties/communityProperties.router.js';
 
 import { auth, roles } from "../../middleware/auth.js";
 import { endPoint } from "./communities.endPoint.js";
@@ -10,13 +10,14 @@ import { validation } from "../../middleware/validation.js";
 import * as validator from "./communities.validation .js";
 const router = Router();
 
-router.use('/:id', CPropertiesRouter);
+router.use('/:communityId', CPropertiesRouter);
+
+router.get("/active", asyncHandler(communitiesController.GetActiveCommunities));
 router.get(
     "/",
     auth(endPoint.getAll),
     asyncHandler(communitiesController.GetCommunities)
 );
-router.get("/active", asyncHandler(communitiesController.GetActiveCommunities));
 router.delete(
     "/:communityId",
     auth(endPoint.delete),
