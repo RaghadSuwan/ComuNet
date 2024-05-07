@@ -28,15 +28,15 @@ const communitySchema = new Schema(
   },
   {
     timestamps: true,
-    // toJSON: { virtuals: true },
-    // toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
-// communitySchema.virtual("subcommunity", {
-//   localField: "_id",
-//   foreignField: "communityId",
-//   ref: "Subcommunity",
-// });
+communitySchema.virtual("communityProperties", {
+  localField: "_id",
+  foreignField: "communityId",
+  ref: "CommunityProperties",
+});
 
 const communityModel =
   mongoose.models.Community || model("Community", communitySchema);

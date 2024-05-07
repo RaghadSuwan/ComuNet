@@ -1,6 +1,7 @@
 import userModel from "../../../DB/model/user.model.js";
 import XLSX from "xlsx";
 import { createPdf } from "../../utils/pdf.js";
+import bcryptjs from "bcryptjs";
 
 export const GetProfile = async (req, res, next) => {
     const user = await userModel.findById(req.user._id);
@@ -22,3 +23,16 @@ export const GetUsers = async (req, res, next) => {
     let getUsers = await userModel.find({}).lean();
     await createPdf(getUsers, "listUsers.pdf", req, res);
 };
+export const UpdatePassword = async (req, res, next) => {
+    const { oldPassword, newPassword } = req.body;
+    const user = await userModel.findById(req.user._id);
+    const match = await bcryptjs.compare(oldPassword, user.password);
+    if (!match) {
+        return next(new Error("Invalid old password"));
+    }
+    const hashPassword = await bcryptjs.hash(newPassword, parseInt(process.env.SALTROUND));
+    user.password = hashPassword;
+    await user.save();
+    return res.status(200).json({ message: "Password updated successfully" });
+}
+

@@ -2,6 +2,8 @@ import cloudinary from "../../utils/cloudinary.js";
 import communityModel from "../../../DB/model/community.model.js";
 import { pagination } from "../../utils/pagination.js";
 import slugify from "slugify";
+import communityPropertiesModel from "../../../DB/model/communityProperties.modle.js";
+import postModel from "../../../DB/model/post.modle.js";
 
 export const CreateCommunity = async (req, res, next) => {
   const { name, description } = req.body;
@@ -107,5 +109,7 @@ export const DeleteCommunity = async (req, res, next) => {
   if (!community) {
     return next(new Error(`Community not found`, { cause: 404 }));
   }
+  await postModel.deleteMany({ categoryId });
+  await communityPropertiesModel.deleteMany({ categoryId });
   return res.status(200).json({ message: "success" });
 };

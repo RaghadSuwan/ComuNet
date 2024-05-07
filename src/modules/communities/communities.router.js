@@ -1,6 +1,8 @@
 import { Router } from "express";
 import * as communitiesController from "./communities.controller.js";
 import fileUpload, { fileValidation } from "../../utils/multer.js";
+import CPropertiesRouter from '../../modules/communityProperties/communityProperties.router.js';
+
 import { auth, roles } from "../../middleware/auth.js";
 import { endPoint } from "./communities.endPoint.js";
 import { asyncHandler } from "../../utils/errorHanding.js";
@@ -8,7 +10,7 @@ import { validation } from "../../middleware/validation.js";
 import * as validator from "./communities.validation .js";
 const router = Router();
 
-//router.use('/:id/subcategory', subcategoryRouter);
+router.use('/:id', CPropertiesRouter);
 router.get(
     "/",
     auth(endPoint.getAll),
